@@ -1,7 +1,11 @@
 ﻿using eInsuranceApp.DBContext;
 using eInsuranceApp.Entities.CustomerDTO;
+using eInsuranceApp.Entities.Plans;
 using eInsuranceApp.RepositoryLayer.Interface;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using System.Data;
 
 namespace eInsuranceApp.RepositoryLayer.Implementation
 {
@@ -9,11 +13,15 @@ namespace eInsuranceApp.RepositoryLayer.Implementation
     {
         private readonly AppDbContext _dbContext;
         private readonly ILogger<CustomerRL> _logger;
+        private readonly IConfiguration _configuration;
+        private readonly string _connectionString;
 
-        public CustomerRL(AppDbContext dbContext, ILogger<CustomerRL> logger)
+        public CustomerRL(AppDbContext dbContext, ILogger<CustomerRL> logger, IConfiguration configuration)
         {
             _dbContext = dbContext;
             _logger = logger;
+            _configuration = configuration;
+            _connectionString = _configuration.GetConnectionString("DefaultConnection");
         }
 
         public async Task<CustomerEntity> RegisterCustomerAsync(CustomerEntity customer)
@@ -51,6 +59,55 @@ namespace eInsuranceApp.RepositoryLayer.Implementation
                 _logger.LogError(ex, "Error");
                 throw;
             }
+        }
+
+        public async Task<List<PolicyViewDTO>> GetPoliciesByCustomerIdAsync(int customerId)
+        {
+            var connectionString = _configuration.GetConnectionString("DefaultConnection");
+            var policies = new List<PolicyViewDTO>();
+
+            try
+            {
+                using (var connection = new SqlConnection(connectionString))
+                {
+                    await connection.OpenAsync();
+
+                    using (var command = new SqlCommand("GetPoliciesByCustomerId", connection))
+                    {
+                        command.CommandType = CommandType.StoredProcedure;
+                        command.Parameters.Add(new SqlParameter("@CustomerID", customerId));
+
+                        using (var reader = await command.ExecuteReaderAsync())
+                        {
+                            while (await reader.ReadAsync())
+                            {
+                                var policy = new PolicyViewDTO
+                                {
+                                    PolicyID = reader.GetInt32(reader.GetOrdinal("PolicyID")),
+                                    CustomerName = reader.GetString(reader.GetOrdinal("CustomerName")),
+                                    CustomerEmail = reader.GetString(reader.GetOrdinal("CustomerEmail")),
+                                    SchemeName = reader.GetString(reader.GetOrdinal("SchemeName")),
+                                    SchemeDetails = reader.GetString(reader.GetOrdinal("SchemeDetails")),
+                                    PolicyDetails = reader.GetString(reader.GetOrdinal("PolicyDetails")),
+                                    DateIssued = reader.GetDateTime(reader.GetOrdinal("DateIssued")),
+                                    MaturityPeriod = reader.GetInt32(reader.GetOrdinal("MaturityPeriod")),
+                                    PolicyLapseDate = reader.GetDateTime(reader.GetOrdinal("PolicyLapseDate")),
+                                    Status = reader.GetString(reader.GetOrdinal("Status"))
+                                };
+
+                                policies.Add(policy);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error occurred while fetching policies for CustomerID: {CustomerID}," , customerId);
+                throw;
+            }
+
+            return policies;
         }
 
     }

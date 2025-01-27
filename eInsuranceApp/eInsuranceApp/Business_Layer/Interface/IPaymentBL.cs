@@ -6,5 +6,6 @@ namespace eInsuranceApp.Business_Layer.Interface
     {
         Task InsertPaymentsAsync(PaymentEntity payment);
         Task<PaymentEntity> GetPaymentsByIdAsync(int paymentId);
+        Task<PaymentViewDTO> GetPaymentDetailsByIdAndLog(int paymentId);
     }
 }

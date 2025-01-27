@@ -13,6 +13,7 @@ using eInsuranceApp.UnitOfWork;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
+using System.Text.Json.Serialization;
 
 namespace eInsuranceApp
 {
@@ -21,6 +22,12 @@ namespace eInsuranceApp
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            builder.Services.AddControllers()
+                    .AddJsonOptions(options =>
+                    {
+                        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve; // Prevents circular references
+                    });
 
             // Register EmailSettings from appsettings.json
             builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));

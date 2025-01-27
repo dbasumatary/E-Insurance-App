@@ -4,6 +4,7 @@ using eInsuranceApp.Entities.Payment;
 using eInsuranceApp.RepositoryLayer.Interface;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
 
 namespace eInsuranceApp.RepositoryLayer.Implementation
 {
@@ -11,10 +12,15 @@ namespace eInsuranceApp.RepositoryLayer.Implementation
     {
         public readonly AppDbContext _context;
         private readonly ILogger<CommissionRL> _logger;
-        public CommissionRL(AppDbContext context, ILogger<CommissionRL> logger)
+        private readonly IConfiguration _configuration;
+        private readonly string _connectionString;
+
+        public CommissionRL(AppDbContext context, ILogger<CommissionRL> logger, IConfiguration configuration)
         {
             _context = context;
             _logger = logger;
+            _configuration = configuration;
+            _connectionString = _configuration.GetConnectionString("DefaultConnection");
         }
 
         public async Task<CommissionEntity> AddCommissionAsync(CommissionEntity commission)
@@ -42,6 +48,42 @@ namespace eInsuranceApp.RepositoryLayer.Implementation
                 throw;
             }
         }
+
+
+        public async Task<CommissionViewDTO> GetCommissionDetailsById(int commissionId)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                await connection.OpenAsync();
+
+                var command = new SqlCommand("GetCommissionDetailsById", connection)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
+
+                command.Parameters.AddWithValue("@CommissionID", commissionId);
+
+                var reader = await command.ExecuteReaderAsync();
+
+                if (await reader.ReadAsync())
+                {
+                    var commissionDetail = new CommissionViewDTO
+                    {
+                        CommissionID = reader.GetInt32(reader.GetOrdinal("CommissionID")),
+                        AgentID = reader.GetInt32(reader.GetOrdinal("AgentID")),
+                        AgentName = reader.GetString(reader.GetOrdinal("AgentName")),
+                        PolicyID = reader.GetInt32(reader.GetOrdinal("PolicyID")),
+                        PremiumID = reader.GetInt32(reader.GetOrdinal("PremiumID")),
+                        CommissionAmount = reader.GetDecimal(reader.GetOrdinal("CommissionAmount")),
+                        CreatedAt = reader.GetDateTime(reader.GetOrdinal("CreatedAt"))
+                    };
+
+                    return commissionDetail;
+                }
+                return null;
+            }
+        }
+
 
         public async Task<AgentEntity> GetAgentByIdAsync(int agentId)
         {

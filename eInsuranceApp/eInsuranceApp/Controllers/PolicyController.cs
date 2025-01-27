@@ -49,15 +49,83 @@ namespace eInsuranceApp.Controllers
                 };
 
                 await _policyBL.CreatePolicyAsync(policy);
-
-                return CreatedAtAction(nameof(GetPolicy), new { policyId = policy.PolicyID }, policy);
+                return Ok(new { Message = "Policy created successfully", Policy = policy });
+                //return CreatedAtAction(nameof(GetPolicy), new { policyId = policy.PolicyID }, policy);
             }
+
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while creating the policy.");
                 return StatusCode(500, "Internal server error");
             }
         }
+
+        [HttpGet("{policyId}")]
+        public async Task<IActionResult> GetPolicyDetailsById(int policyId)
+        {
+            try
+            {
+                if (policyId <= 0)
+                {
+                    _logger?.LogWarning("Invalid PolicyID: {PolicyID}", policyId);
+                    return BadRequest(new { Message = "Invalid Policy ID." });
+                }
+
+                var policy = await _policyBL.GetPolicyDetailsByIdAsync(policyId);
+
+                if (policy == null)
+                {
+                    _logger?.LogWarning("Policy not found for PolicyID: {PolicyID}", policyId);
+                    return NotFound(new { Message = "Policy not found." });
+                }
+
+                _logger?.LogInformation("Policy details returned for PolicyID: {PolicyID}", policyId);
+                return Ok(policy);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error for PolicyID: {PolicyID}", policyId);
+                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "Error" });
+            }
+        }
+
+
+        [HttpGet("GetAllPolicies")]
+        public async Task<IActionResult> GetPolicies()
+        {
+            _logger.LogInformation("Fetching all policies.");
+            try
+            {
+                var policies = await _policyBL.GetPoliciesAsync();
+                return Ok(policies);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error fetching policies: {ex.Message}");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+
+        [HttpGet("search")]
+        public async Task<IActionResult> SearchPolicyDetails([FromQuery] int? policyId, [FromQuery] string customerName)
+        {
+            try
+            {
+                var policy = await _policyBL.SearchPolicyDetailsAsync(policyId, customerName);
+                if (policy == null)
+                {
+                    return NotFound();
+                }
+                return Ok(policy);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error occurred while searching for policy details: {ex.Message}");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
 
 
         /*[HttpPost("CreatePolicy")]
@@ -91,24 +159,24 @@ namespace eInsuranceApp.Controllers
 
         }*/
 
-        
+
         //[Authorize(Roles = "Admin")]
-        [HttpGet("{policyId}")]
-        public async Task<IActionResult> GetPolicy(int policyId)
-        {
-            try
-            {
-                var policyDTO = await _policyBL.GetPolicyAsync(policyId);
-                return Ok(policyDTO);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Internal Server Error", details = ex.Message });
-            }
-        }
+        //[HttpGet("{policyId}")]
+        //public async Task<IActionResult> GetPolicy(int policyId)
+        //{
+        //    try
+        //    {
+        //        var policyDTO = await _policyBL.GetPolicyAsync(policyId);
+        //        return Ok(policyDTO);
+        //    }
+        //    catch (KeyNotFoundException ex)
+        //    {
+        //        return NotFound(new { message = ex.Message });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, new { message = "Internal Server Error", details = ex.Message });
+        //    }
+        //}
     }
 }

@@ -4,7 +4,9 @@ using eInsuranceApp.Entities.Dtos;
 using eInsuranceApp.Entities.Payment;
 using eInsuranceApp.Entities.Plans;
 using eInsuranceApp.RepositoryLayer.Implementation;
+using eInsuranceApp.RepositoryLayer.Interface;
 using eInsuranceApp.UnitOfWork;
+using Microsoft.EntityFrameworkCore;
 
 namespace eInsuranceApp.Business_Layer.Implementation
 {
@@ -48,41 +50,82 @@ namespace eInsuranceApp.Business_Layer.Implementation
 
 
         // Get Policy by ID
-        public async Task<Policy> GetPolicyAsync(int policyId)
+        //public async Task<Policy> GetPolicyAsync(int policyId)
+        //{
+        //    try
+        //    {
+        //        //var policy = await _policyRepo.GetPolicyByIdAsync(policyId);
+        //        var policy = await _unitOfWork.PolicyRepo.GetPolicyByIdAsync(policyId);
+
+        //        if (policy == null)
+        //        {
+        //            _logger.LogWarning($"Policy with ID {policyId} not found.");
+        //            throw new KeyNotFoundException($"Policy with ID {policyId} not found.");
+        //        }
+
+        //        var policyDTO = new Policy
+        //        {
+        //            PolicyID = policy.PolicyID,
+        //            CustomerID = policy.CustomerID,
+        //            SchemeID = policy.SchemeID,
+        //            PolicyDetails = policy.PolicyDetails,
+        //            //BasePremiumRate = policy.BasePremiumRate,
+        //            //Premium = (decimal)policy.Premium,
+        //            DateIssued = policy.DateIssued,
+        //            MaturityPeriod = policy.MaturityPeriod,
+        //            PolicyLapseDate = policy.PolicyLapseDate
+        //        };
+
+        //        _logger.LogInformation($"Fetched policy with ID {policyId} successfully.");
+        //        return policyDTO;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, "Error occurred while fetching the policy.");
+        //        throw;
+        //    }
+        //}
+
+
+        public async Task<PolicyViewDTO> GetPolicyDetailsByIdAsync(int policyId)
         {
             try
             {
-                //var policy = await _policyRepo.GetPolicyByIdAsync(policyId);
-                var policy = await _unitOfWork.PolicyRepo.GetPolicyByIdAsync(policyId);
+                if (policyId <= 0)
+                {
+                    _logger?.LogWarning("Invalid PolicyID: {PolicyID}", policyId);
+                    return null;
+                }
+
+                //var policy = await _policyRL.GetPolicyDetailsByIdAsync(policyId);
+                var policy = await _unitOfWork.PolicyRepo.GetPolicyDetailsByIdAsync(policyId);
 
                 if (policy == null)
                 {
-                    _logger.LogWarning($"Policy with ID {policyId} not found.");
-                    throw new KeyNotFoundException($"Policy with ID {policyId} not found.");
+                    _logger?.LogWarning("Policy not found for PolicyID: {PolicyID}", policyId);
+                }
+                else
+                {
+                    _logger?.LogInformation("Policy found for PolicyID: {PolicyID}", policyId);
                 }
 
-                var policyDTO = new Policy
-                {
-                    PolicyID = policy.PolicyID,
-                    CustomerID = policy.CustomerID,
-                    SchemeID = policy.SchemeID,
-                    PolicyDetails = policy.PolicyDetails,
-                    //BasePremiumRate = policy.BasePremiumRate,
-                    //Premium = (decimal)policy.Premium,
-                    DateIssued = policy.DateIssued,
-                    MaturityPeriod = policy.MaturityPeriod,
-                    PolicyLapseDate = policy.PolicyLapseDate
-                };
-
-                _logger.LogInformation($"Fetched policy with ID {policyId} successfully.");
-                return policyDTO;
+                return policy;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while fetching the policy.");
+                _logger?.LogError(ex, "Error in PolicyID: {PolicyID}", policyId);
                 throw;
             }
         }
+
+        public async Task<IEnumerable<PolicyViewDTO>> GetPoliciesAsync()
+        {
+            return await _unitOfWork.PolicyRepo.GetPoliciesAsync();
+        }
+
+
+      
+
 
         /*public async Task<decimal> GetBasePayRateByPolicyIdAsync(int policyId)
         {
@@ -111,5 +154,11 @@ namespace eInsuranceApp.Business_Layer.Implementation
         {
             return await _unitOfWork.PolicyRepo.GetBasePremiumRateAsync(schemeId);
         }
+
+        public async Task<PolicyViewDTO> SearchPolicyDetailsAsync(int? policyId, string customerName)
+        {
+            return await _unitOfWork.PolicyRepo.SearchPolicyDetailsAsync(policyId, customerName);
+        }
     }
 }
+

@@ -19,7 +19,7 @@ namespace eInsuranceApp.Controllers
         }
 
         [HttpPost("register")]
-        //[Authorize]
+        [Authorize]
         public async Task<IActionResult> RegisterAgent([FromBody] AgentRegistrationRequest agentdto)
         {
             try

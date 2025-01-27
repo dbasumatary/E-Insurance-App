@@ -9,5 +9,6 @@ namespace eInsuranceApp.RepositoryLayer.Interface
         //Task<List<CommissionEntity>> CalculateCommissionAsync(int agentId);
         Task<CommissionEntity> AddCommissionAsync(CommissionEntity commission);
         Task<AgentEntity> GetAgentByIdAsync(int agentId);
+        Task<CommissionViewDTO> GetCommissionDetailsById(int commissionId);
     }
 }

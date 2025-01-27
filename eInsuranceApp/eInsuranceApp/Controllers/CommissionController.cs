@@ -69,7 +69,22 @@ namespace eInsuranceApp.Controllers
                 return StatusCode(500, "An error occurred while processing your request.");
             }
         }
+
+
+        [HttpGet("{commissionId}")]
+        public async Task<IActionResult> GetCommissionDetails(int commissionId)
+        {
+            var commissionDetails = await _commissionBL.GetCommissionDetailsByIdAndLog(commissionId);
+
+            if (commissionDetails == null)
+            {
+                return NotFound(new { Message = "Commission details not found." });
+            }
+
+            return Ok(commissionDetails);
+        }
     }
+
 }
 
 

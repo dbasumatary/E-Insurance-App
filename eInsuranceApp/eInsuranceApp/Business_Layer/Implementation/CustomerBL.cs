@@ -1,6 +1,7 @@
 ﻿using eInsuranceApp.Business_Layer.Interface;
 using eInsuranceApp.Email;
 using eInsuranceApp.Entities.CustomerDTO;
+using eInsuranceApp.Entities.Plans;
 using eInsuranceApp.RepositoryLayer.Interface;
 using eInsuranceApp.StaticClass;
 
@@ -72,6 +73,18 @@ namespace eInsuranceApp.Business_Layer.Implementation
 
             var customerAge = customer.DateOfBirth.CalculateAge();
             return customerAge;
+        }
+
+        public async Task<List<PolicyViewDTO>> GetPoliciesForCustomerAsync(int customerId)
+        {
+            if (customerId <= 0)
+            {
+                _logger.LogWarning("Invalid CustomerID: {CustomerID}", customerId);
+                throw new ArgumentException("Customer ID must be greater than zero.");
+            }
+
+            _logger.LogInformation("Fetching policies for CustomerID: {CustomerID}", customerId);
+            return await _customerRL.GetPoliciesByCustomerIdAsync(customerId);
         }
     }
 }

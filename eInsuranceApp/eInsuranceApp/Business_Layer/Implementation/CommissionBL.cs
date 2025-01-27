@@ -63,6 +63,23 @@ namespace eInsuranceApp.Business_Layer.Implementation
         }
 
 
+        public async Task<CommissionViewDTO> GetCommissionDetailsByIdAndLog(int commissionId)
+        {
+
+            var commissionDetail = await _commissionRL.GetCommissionDetailsById(commissionId);
+
+            if (commissionDetail != null)
+            {
+                _logger.LogInformation($"Commission details for CommissionID {commissionId} found.");
+            }
+            else
+            {
+                _logger.LogWarning($"No commission for CommissionID {commissionId}.");
+            }
+
+            return commissionDetail;
+        }
+
 
         //public async Task<List<CommissionEntity>> GetCommissionAsync(int agentId)
         //{

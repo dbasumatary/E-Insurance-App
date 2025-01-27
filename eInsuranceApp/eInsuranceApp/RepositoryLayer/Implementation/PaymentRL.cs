@@ -5,6 +5,8 @@ using eInsuranceApp.Entities.Plans;
 using eInsuranceApp.RepositoryLayer.Interface;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using System.Data;
 
 namespace eInsuranceApp.RepositoryLayer.Implementation
 {
@@ -12,10 +14,14 @@ namespace eInsuranceApp.RepositoryLayer.Implementation
     {
         private readonly AppDbContext _context;
         private readonly ILogger<PaymentRL> _logger;
-        public PaymentRL(AppDbContext context, ILogger<PaymentRL> logger)
+        private readonly IConfiguration _configuration;
+        private readonly string _connectionString;
+        public PaymentRL(AppDbContext context, ILogger<PaymentRL> logger, IConfiguration configuration)
         {
             _context = context;
             _logger = logger;
+            _configuration = configuration;
+            _connectionString = _configuration.GetConnectionString("DefaultConnection");
         }
 
         public async Task InsertPaymentAsync(PaymentEntity payment)
@@ -55,6 +61,50 @@ namespace eInsuranceApp.RepositoryLayer.Implementation
             //await _context.Payments.AddAsync(payment);
             //await _context.SaveChangesAsync();
         }
+
+
+        public async Task<PaymentViewDTO> GetPaymentDetailsById(int paymentId)
+        {
+            string connectionString = _connectionString;
+
+            using (var connection = new SqlConnection(connectionString))
+            {
+                await connection.OpenAsync();
+
+                var command = new SqlCommand("GetPaymentDetailsById", connection)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
+                command.Parameters.AddWithValue("@PaymentID", paymentId);
+
+                var reader = await command.ExecuteReaderAsync();
+                if (await reader.ReadAsync())
+                {
+                    var paymentDetail = new PaymentViewDTO
+                    {
+                        PaymentID = reader.GetInt32(reader.GetOrdinal("PaymentID")),
+                        CustomerName = reader.GetString(reader.GetOrdinal("CustomerName")),
+                        CustomerEmail = reader.GetString(reader.GetOrdinal("CustomerEmail")),
+                        PolicyDetails = reader.GetString(reader.GetOrdinal("PolicyDetails")),
+                        Amount = reader.GetDecimal(reader.GetOrdinal("Amount")),
+                        PaymentDate = reader.GetDateTime(reader.GetOrdinal("PaymentDate")),
+                        Status = reader.GetString(reader.GetOrdinal("Status")),
+                        PaymentType = reader.GetString(reader.GetOrdinal("PaymentType")),
+                        CreatedAt = reader.GetDateTime(reader.GetOrdinal("CreatedAt"))
+                    };
+                    return paymentDetail;
+                }
+                else
+                {
+                    _logger?.LogWarning("No Payment found for PaymentID: {PaymentID}", paymentId);
+                    return null;
+                }
+                
+            }
+        }
+
+
+
 
         public async Task<PaymentEntity> GetPaymentByIdAsync(int paymentId)
         {

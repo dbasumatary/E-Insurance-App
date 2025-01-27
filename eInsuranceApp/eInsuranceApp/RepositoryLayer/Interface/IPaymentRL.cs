@@ -12,6 +12,7 @@ namespace eInsuranceApp.RepositoryLayer.Interface
         Task<Policy> GetPolicyByIdAsync(int policyId);
 
         Task<Policy?> GetPolicyAsync(int customerId, int policyId);
+        Task<PaymentViewDTO> GetPaymentDetailsById(int paymentId);
 
     }
 

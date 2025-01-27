@@ -1,4 +1,5 @@
 ﻿using eInsuranceApp.Entities.CustomerDTO;
+using eInsuranceApp.Entities.Plans;
 
 namespace eInsuranceApp.RepositoryLayer.Interface
 {
@@ -9,6 +10,6 @@ namespace eInsuranceApp.RepositoryLayer.Interface
         Task<bool> IsAgentExistsAsync(int agentId);
         Task<CustomerEntity> GetCustomerByIdAsync(int customerId);
 
-
+        Task<List<PolicyViewDTO>> GetPoliciesByCustomerIdAsync(int customerId);
     }
 }

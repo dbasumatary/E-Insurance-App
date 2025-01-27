@@ -71,6 +71,25 @@ namespace eInsuranceApp.Business_Layer.Implementation
             }
         }
 
+
+        public async Task<PaymentViewDTO> GetPaymentDetailsByIdAndLog(int paymentId)
+        {
+
+            var paymentDetail = await _paymentRL.GetPaymentDetailsById(paymentId);
+
+            if (paymentDetail != null)
+            {
+                _logger.LogInformation($"Payment details for PaymentID {paymentId} found.");
+            }
+            else
+            {
+                _logger.LogInformation($"No payment for PaymentID {paymentId}.");
+            }
+
+            return paymentDetail;
+        }
+
+
         /*public async Task<PaymentEntity> GetPaymentsByIdAsync(int paymentId)
         {
             return await _paymentRL.GetPaymentByIdAsync(paymentId);
